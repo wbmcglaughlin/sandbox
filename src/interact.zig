@@ -2,10 +2,10 @@ const window = @import("window.zig");
 const particle = @import("particle.zig");
 
 pub fn plotLine(
-    points: *[window.CAPACITY]particle.Particle,
+    points: *[window.CAPACITY]particle.ParticleType,
     start: particle.Point,
     end: particle.Point,
-    pixel_type: particle.Particle,
+    pixel_type: particle.ParticleType,
 ) !void {
     var x = start.x;
     var y = start.y;

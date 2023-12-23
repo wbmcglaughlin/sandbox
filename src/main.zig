@@ -12,8 +12,8 @@ pub fn main() !void {
     r.SetTargetFPS(60);
     defer r.CloseWindow();
 
-    var points: [window.CAPACITY]particle.Particle = [_]particle.Particle{particle.Particle.empty} ** window.CAPACITY;
-
+    var points: [window.CAPACITY]particle.ParticleType = [_]particle.ParticleType{particle.ParticleType.empty} ** window.CAPACITY;
+    var currentParticle = particle.ParticleType.sand;
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
         if (r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON)) {
@@ -24,7 +24,7 @@ pub fn main() !void {
                     &points,
                     lastPosition,
                     cursorPosPoint,
-                    particle.Particle.sand,
+                    currentParticle,
                 );
                 lastPosition = cursorPosPoint;
             }
@@ -32,20 +32,32 @@ pub fn main() !void {
             lastPosition = particle.pointFromVec2(r.GetMousePosition());
         }
 
+        if (r.IsKeyPressed(r.KEY_RIGHT)) {
+            currentParticle = particle.ParticleType.water;
+        }
+
+        if (r.IsKeyPressed(r.KEY_LEFT)) {
+            currentParticle = particle.ParticleType.sand;
+        }
+
         try sim.update(&points);
 
         r.BeginDrawing();
         r.ClearBackground(r.RAYWHITE);
         r.DrawFPS(window.WINDOW_WIDTH - 100, 10);
-        r.DrawText("sandbox", 10, 10, 20, r.BLACK);
+        r.DrawText("current", 10, 10, 20, r.BLACK);
+
         for (&points, 0..) |item, i| {
             const i_c = @as(i32, @intCast(i));
-            if (item == particle.Particle.sand) {
-                r.DrawPixel(
-                    @rem(i_c, window.WINDOW_WIDTH),
-                    @divFloor(i_c, window.WINDOW_WIDTH),
-                    r.BLACK,
-                );
+            const x = @rem(i_c, window.WINDOW_WIDTH);
+            const y = @divFloor(i_c, window.WINDOW_WIDTH);
+            const color = switch (item) {
+                particle.ParticleType.sand => r.Color{ .a = 255, .r = 230, .g = 184, .b = 78 },
+                particle.ParticleType.water => r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
+                else => r.Color{ .a = 0 },
+            };
+            if (color.a != 0) {
+                r.DrawPixel(x, y, color);
             }
         }
 
