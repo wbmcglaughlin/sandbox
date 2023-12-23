@@ -1,5 +1,5 @@
 const r = @cImport(@cInclude("raylib.h"));
-pub const Pixel = enum(u32) { empty, sand };
+pub const Particle = enum(u32) { empty, sand };
 pub const Point = struct { x: i32, y: i32 };
 
 pub fn pointFromVec2(vec: r.Vector2) Point {
