@@ -20,13 +20,23 @@ pub fn swap(points: *Points, x1: usize, y1: usize, x2: usize, y2: usize) void {
     points[x2][y2] = temp;
 }
 
+pub fn get_mass(points: *Points) u32 {
+    var mass: u32 = 0;
+    for (points, 0..) |row, x| {
+        for (row, 0..) |_, y| {
+            if (points[x][y] != ParticleType.empty) {
+                mass += 1;
+            }
+        }
+    }
+    return mass;
+}
 pub fn up_pass(points: *Points) !void {
     var prng = std.rand.DefaultPrng.init(blk: {
         var seed: u64 = undefined;
         try std.os.getrandom(std.mem.asBytes(&seed));
         break :blk seed;
     });
-    var non_empty: u32 = 0;
     for (0..window.WIDTH) |x| {
         for (0..window.HEIGHT) |y_a| {
             const y = window.HEIGHT - y_a - 1;
@@ -34,27 +44,28 @@ pub fn up_pass(points: *Points) !void {
                 continue;
             }
 
-            non_empty += 1;
             const bottom = y == window.HEIGHT - 2;
+            const left_side = x == 0;
+            const right_side = x == window.WIDTH - 1;
             // The effect of gravity on a solid particle.
             if (points[x][y + 1] == ParticleType.empty and !bottom) {
                 swap(points, x, y, x, y + 1);
             } else {
                 // The particle below is solid, check if the particle is going to fall.
-                if (points[x - 1][y + 1] == ParticleType.empty and x != 0 and !bottom) {
+                if (!bottom and !left_side and points[x - 1][y + 1] == ParticleType.empty) {
                     swap(points, x, y, x - 1, y + 1);
-                } else if (points[x + 1][y + 1] == ParticleType.empty and x != window.WIDTH - 1 and !bottom) {
+                } else if (!bottom and !right_side and points[x + 1][y + 1] == ParticleType.empty) {
                     swap(points, x, y, x + 1, y + 1);
                 } else {
                     // At this point there is no space for the particle to fall down into.
                     // Liquids should randomly move left or right if there is available space.
                     const value = prng.random().intRangeAtMost(i64, 0, 1);
                     if (value == 0) {
-                        if (points[x - 1][y] == ParticleType.empty and x != 0) {
+                        if (!left_side and points[x - 1][y] == ParticleType.empty) {
                             swap(points, x, y, x - 1, y);
                         }
                     } else {
-                        if (points[x + 1][y] == ParticleType.empty and x != window.WIDTH - 1) {
+                        if (!right_side and points[x + 1][y] == ParticleType.empty) {
                             swap(points, x, y, x + 1, y);
                         }
                     }
@@ -62,6 +73,4 @@ pub fn up_pass(points: *Points) !void {
             }
         }
     }
-
-    std.debug.print("{}\n", .{non_empty});
 }
