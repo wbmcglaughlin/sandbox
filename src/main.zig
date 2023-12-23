@@ -3,37 +3,9 @@ const std = @import("std");
 const window = @import("window.zig");
 const interact = @import("interact.zig");
 const pixel = @import("pixel.zig");
+const sim = @import("simulation.zig");
 
 const Vector2List = std.ArrayList(pixel.Point);
-
-fn pointFromVec2(vec: r.Vector2) pixel.Point {
-    return pixel.Point{
-        .x = @as(i32, @intFromFloat(vec.x)),
-        .y = @as(i32, @intFromFloat(vec.y)),
-    };
-}
-
-fn xy_i(x: usize, y: usize) usize {
-    return y * window.WINDOW_WIDTH + x;
-}
-
-fn update(points: *[window.CAPACITY]pixel.Pixel) !void {
-    // TODO: should test that mass is conserved.
-    // TODO: how often should the simulation update, this should be configurable.
-    for (0..window.WINDOW_WIDTH) |x| {
-        for (0..window.WINDOW_HEIGHT) |y| {
-            // Check for non empty points.
-            // TODO: current implementation will not conserve mass, depending on how the updates
-            //   are going to occur, we should have some sort of buffer to not overwrite.
-            if (points[xy_i(x, y)] != pixel.Pixel.empty and y != window.WINDOW_HEIGHT - 1) {
-                if (points[xy_i(x, y + 1)] == pixel.Pixel.empty) {
-                    points[xy_i(x, y + 1)] = pixel.Pixel.sand;
-                    points[xy_i(x, y)] = pixel.Pixel.empty;
-                }
-            }
-        }
-    }
-}
 
 pub fn main() !void {
     r.InitWindow(window.WINDOW_WIDTH, window.WINDOW_HEIGHT, "My Window Name");
@@ -47,7 +19,7 @@ pub fn main() !void {
         if (r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON)) {
             const cursorPos = r.GetMousePosition();
             if (r.CheckCollisionPointRec(cursorPos, window.SCEEN_RECTANGLE)) {
-                const cursorPosPoint = pointFromVec2(cursorPos);
+                const cursorPosPoint = pixel.pointFromVec2(cursorPos);
                 try interact.plotLine(
                     &points,
                     lastPosition,
@@ -57,10 +29,10 @@ pub fn main() !void {
                 lastPosition = cursorPosPoint;
             }
         } else {
-            lastPosition = pointFromVec2(r.GetMousePosition());
+            lastPosition = pixel.pointFromVec2(r.GetMousePosition());
         }
 
-        try update(&points);
+        try sim.update(&points);
 
         r.BeginDrawing();
         r.ClearBackground(r.RAYWHITE);
