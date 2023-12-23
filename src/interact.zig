@@ -2,7 +2,7 @@ const window = @import("window.zig");
 const particle = @import("particle.zig");
 
 pub fn plotLine(
-    points: *[window.CAPACITY]particle.ParticleType,
+    points: *[window.WIDTH][window.HEIGHT]particle.ParticleType,
     start: particle.Point,
     end: particle.Point,
     pixel_type: particle.ParticleType,
@@ -16,7 +16,7 @@ pub fn plotLine(
     var err = dx + dy;
 
     while (true) {
-        points[@as(usize, @intCast(y * window.WINDOW_WIDTH + x))] = pixel_type;
+        points[@as(usize, @intCast(x))][@as(usize, @intCast(y))] = pixel_type;
 
         if (x == end.x and y == end.y) break;
 

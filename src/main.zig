@@ -8,11 +8,17 @@ const sim = @import("simulation.zig");
 const Vector2List = std.ArrayList(particle.Point);
 
 pub fn main() !void {
-    r.InitWindow(window.WINDOW_WIDTH, window.WINDOW_HEIGHT, "My Window Name");
+    r.InitWindow(window.WIDTH, window.HEIGHT, "sandbox");
     r.SetTargetFPS(60);
     defer r.CloseWindow();
 
-    var points: [window.CAPACITY]particle.ParticleType = [_]particle.ParticleType{particle.ParticleType.empty} ** window.CAPACITY;
+    var points: [window.WIDTH][window.HEIGHT]particle.ParticleType = undefined;
+    for (&points, 0..) |row, x| {
+        for (row, 0..) |_, y| {
+            points[x][y] = particle.ParticleType.empty;
+        }
+    }
+
     var currentParticle = particle.ParticleType.sand;
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
@@ -44,20 +50,23 @@ pub fn main() !void {
 
         r.BeginDrawing();
         r.ClearBackground(r.RAYWHITE);
-        r.DrawFPS(window.WINDOW_WIDTH - 100, 10);
+        r.DrawFPS(window.WIDTH - 100, 10);
         r.DrawText("current", 10, 10, 20, r.BLACK);
 
-        for (&points, 0..) |item, i| {
-            const i_c = @as(i32, @intCast(i));
-            const x = @rem(i_c, window.WINDOW_WIDTH);
-            const y = @divFloor(i_c, window.WINDOW_WIDTH);
-            const color = switch (item) {
-                particle.ParticleType.sand => r.Color{ .a = 255, .r = 230, .g = 184, .b = 78 },
-                particle.ParticleType.water => r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
-                else => r.Color{ .a = 0 },
-            };
-            if (color.a != 0) {
-                r.DrawPixel(x, y, color);
+        for (&points, 0..) |row, x| {
+            for (row, 0..) |item, y| {
+                const color = switch (item) {
+                    particle.ParticleType.sand => r.Color{ .a = 255, .r = 230, .g = 184, .b = 78 },
+                    particle.ParticleType.water => r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
+                    else => r.Color{ .a = 0 },
+                };
+                if (color.a != 0) {
+                    r.DrawPixel(
+                        @as(i32, @intCast(x)),
+                        @as(i32, @intCast(y)),
+                        color,
+                    );
+                }
             }
         }
 
