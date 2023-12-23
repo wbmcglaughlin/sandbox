@@ -1,7 +1,7 @@
 const window = @import("window.zig");
 const particle = @import("particle.zig");
 
-pub fn plotLine(
+pub fn plot_line(
     points: *[window.WIDTH][window.HEIGHT]particle.ParticleType,
     start: particle.Point,
     end: particle.Point,

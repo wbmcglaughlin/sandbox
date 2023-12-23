@@ -25,8 +25,8 @@ pub fn main() !void {
         if (r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON)) {
             const cursorPos = r.GetMousePosition();
             if (r.CheckCollisionPointRec(cursorPos, window.SCEEN_RECTANGLE)) {
-                const cursorPosPoint = particle.pointFromVec2(cursorPos);
-                try interact.plotLine(
+                const cursorPosPoint = particle.vec2_to_point(cursorPos);
+                try interact.plot_line(
                     &points,
                     lastPosition,
                     cursorPosPoint,
@@ -35,7 +35,7 @@ pub fn main() !void {
                 lastPosition = cursorPosPoint;
             }
         } else {
-            lastPosition = particle.pointFromVec2(r.GetMousePosition());
+            lastPosition = particle.vec2_to_point(r.GetMousePosition());
         }
 
         if (r.IsKeyPressed(r.KEY_RIGHT)) {
