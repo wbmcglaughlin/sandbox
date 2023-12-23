@@ -9,11 +9,11 @@ const sim = @import("simulation.zig");
 const Vector2List = std.ArrayList(particle.Point);
 
 pub fn main() !void {
-    r.InitWindow(window.WIDTH, window.HEIGHT, "sandbox");
+    r.InitWindow(window.WINDOW_WIDTH, window.WINDOW_HEIGHT, "sandbox");
     r.SetTargetFPS(60);
     defer r.CloseWindow();
 
-    var points: [window.WIDTH][window.HEIGHT]particle.ParticleType = undefined;
+    var points: sim.Points = undefined;
     for (&points, 0..) |row, x| {
         for (row, 0..) |_, y| {
             points[x][y] = particle.ParticleType.empty;
@@ -21,70 +21,64 @@ pub fn main() !void {
     }
 
     var cam = r.Camera2D{ .rotation = 0 };
-    cam.zoom = 1;
+    cam.zoom = window.SCALE;
 
-    var currentParticle = particle.ParticleType.sand;
+    const left_click_particle = particle.ParticleType.sand;
+    const right_click_particle = particle.ParticleType.water;
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
-        // translate based on right click
-        if (r.IsMouseButtonDown(r.MOUSE_BUTTON_MIDDLE)) {
-            const delta = r.GetMouseDelta();
-            // delta = Vector2Scale(delta, -1.0f / cam.zoom);
+        const mouseWorldPos = r.GetScreenToWorld2D(r.GetMousePosition(), cam);
 
-            cam.target = r.Vector2{ .x = cam.target.x + delta.x, .y = cam.target.y + delta.y };
-        }
+        // // translate based on right click
+        // if (r.IsMouseButtonDown(r.MOUSE_BUTTON_MIDDLE)) {
+        //     const delta = r.GetMouseDelta();
+        //     // delta = Vector2Scale(delta, -1.0f / cam.zoom);
 
-        // zoom based on wheel
-        const wheel = r.GetMouseWheelMove();
-        if (wheel != 0) {
-            // get the world point that is under the mouse
-            const mouseWorldPos = r.GetScreenToWorld2D(r.GetMousePosition(), cam);
+        //     cam.target = r.Vector2{ .x = cam.target.x + delta.x, .y = cam.target.y + delta.y };
+        // }
 
-            // set the offset to where the mouse is
-            cam.offset = r.GetMousePosition();
+        // // zoom based on wheel
+        // const wheel = r.GetMouseWheelMove();
+        // if (wheel != 0) {
+        //     // get the world point that is under the mouse
 
-            // set the target to match, so that the camera maps the world space point under the cursor to the screen space point under the cursor at any zoom
-            cam.target = mouseWorldPos;
+        //     // set the offset to where the mouse is
+        //     cam.offset = r.GetMousePosition();
 
-            // zoom
-            cam.zoom += wheel * 0.125;
-            if (cam.zoom < 0.125)
-                cam.zoom = 0.125;
-        }
+        //     // set the target to match, so that the camera maps the world space point under the cursor to the screen space point under the cursor at any zoom
+        //     cam.target = mouseWorldPos;
 
-        if (r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON)) {
-            const cursorPos = r.GetMousePosition();
-            if (r.CheckCollisionPointRec(cursorPos, window.SCEEN_RECTANGLE)) {
-                // TODO: this should handle zoom and translation.
-                const cursorPosPoint = particle.vec2_to_point(cursorPos);
+        //     // zoom
+        //     cam.zoom += wheel * 0.125;
+        //     if (cam.zoom < 0.125)
+        //         cam.zoom = 0.125;
+        // }
+        const lmb_down = r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON);
+        const rmb_down = r.IsMouseButtonDown(r.MOUSE_RIGHT_BUTTON);
+        if (lmb_down or rmb_down) {
+            if (r.CheckCollisionPointRec(mouseWorldPos, window.SCEEN_RECTANGLE)) {
+                const cursorPosPoint = particle.vec2_to_point(mouseWorldPos);
                 try interact.plot_line(
                     &points,
                     lastPosition,
                     cursorPosPoint,
-                    currentParticle,
+                    if (lmb_down) left_click_particle else right_click_particle,
                 );
                 lastPosition = cursorPosPoint;
             }
         } else {
-            lastPosition = particle.vec2_to_point(r.GetMousePosition());
-        }
-
-        if (r.IsKeyPressed(r.KEY_RIGHT)) {
-            currentParticle = particle.ParticleType.water;
-        }
-
-        if (r.IsKeyPressed(r.KEY_LEFT)) {
-            currentParticle = particle.ParticleType.sand;
+            lastPosition = particle.vec2_to_point(mouseWorldPos);
         }
 
         try sim.update(&points);
 
         r.BeginDrawing();
         r.ClearBackground(r.RAYWHITE);
-        r.DrawFPS(window.WIDTH - 100, 10);
-        r.DrawText("current", 10, 10, 20, r.BLACK);
+        r.DrawFPS(window.WINDOW_WIDTH - 100, 10);
+        r.DrawText("sandbox", 10, 10, 20, r.BLACK);
 
         r.BeginMode2D(cam);
+        // r.DrawRectangleLinesEx(window.SCEEN_RECTANGLE, 3, r.BLACK);
         for (&points, 0..) |row, x| {
             for (row, 0..) |item, y| {
                 const color = switch (item) {

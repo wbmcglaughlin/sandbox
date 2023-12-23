@@ -2,14 +2,13 @@ const std = @import("std");
 const window = @import("window.zig");
 const particle = @import("particle.zig");
 const ParticleType = particle.ParticleType;
-const Points = [window.WIDTH][window.HEIGHT]particle.ParticleType;
+pub const Points = [window.WIDTH][window.HEIGHT]particle.ParticleType;
 
 fn xy_i(x: usize, y: usize) usize {
     return y * window.WIDTH + x;
 }
 
 pub fn update(points: *Points) !void {
-    // TODO: should test that mass is conserved.
     // TODO: how often should the simulation update, this should be configurable.
     try up_pass(points);
 }
@@ -47,6 +46,7 @@ pub fn up_pass(points: *Points) !void {
             const bottom = y == window.HEIGHT - 2;
             const left_side = x == 0;
             const right_side = x == window.WIDTH - 1;
+            // TODO: should handle solid liquid interaction.
             // The effect of gravity on a solid particle.
             if (points[x][y + 1] == ParticleType.empty and !bottom) {
                 swap(points, x, y, x, y + 1);
@@ -57,6 +57,9 @@ pub fn up_pass(points: *Points) !void {
                 } else if (!bottom and !right_side and points[x + 1][y + 1] == ParticleType.empty) {
                     swap(points, x, y, x + 1, y + 1);
                 } else {
+                    if (points[x][y] != ParticleType.water) {
+                        continue;
+                    }
                     // At this point there is no space for the particle to fall down into.
                     // Liquids should randomly move left or right if there is available space.
                     const value = prng.random().intRangeAtMost(i64, 0, 1);
