@@ -1,56 +1,34 @@
 const r = @cImport(@cInclude("raylib.h"));
 const std = @import("std");
-const Vector2List = std.ArrayList(Point);
-const Point = struct { x: i32, y: i32 };
-const Pixel = enum(u32) { empty, sand };
-const window_width: i32 = 900;
-const window_height: i32 = 600;
-const capacity = window_width * window_height;
-const SCEEN_RECTANGLE = r.Rectangle{ .x = 0, .y = 0, .width = window_width, .height = window_height };
+const window = @import("window.zig");
+const interact = @import("interact.zig");
+const pixel = @import("pixel.zig");
 
-fn pointFromVec2(vec: r.Vector2) Point {
-    return Point{ .x = @as(i32, @intFromFloat(vec.x)), .y = @as(i32, @intFromFloat(vec.y)) };
+const Vector2List = std.ArrayList(pixel.Point);
+
+fn pointFromVec2(vec: r.Vector2) pixel.Point {
+    return pixel.Point{
+        .x = @as(i32, @intFromFloat(vec.x)),
+        .y = @as(i32, @intFromFloat(vec.y)),
+    };
 }
 
-fn plotLine(points: *[capacity]Pixel, start: Point, end: Point, pixel_type: Pixel) !void {
-    var x = start.x;
-    var y = start.y;
-    const dx: i32 = @as(i32, @intCast(@abs(end.x - start.x)));
-    const sx: i32 = if (start.x < end.x) 1 else -1;
-    const dy: i32 = -@as(i32, @intCast(@abs(end.y - start.y)));
-    const sy: i32 = if (start.y < end.y) 1 else -1;
-    var err = dx + dy;
-
-    while (true) {
-        points[@as(usize, @intCast(y * window_width + x))] = pixel_type;
-
-        if (x == end.x and y == end.y) break;
-
-        const e2 = 2 * err;
-        if (e2 >= dy) {
-            if (x == end.x) break;
-            err = err + dy;
-            x = x + sx;
-        }
-        if (e2 <= dx) {
-            if (y == end.y) break;
-            err = err + dx;
-            y = y + sy;
-        }
-    }
+fn xy_i(x: usize, y: usize) usize {
+    return y * window.WINDOW_WIDTH + x;
 }
 
-fn i_xy(x: usize, y: usize) usize {
-    return y * window_width + x;
-}
-
-fn update(points: *[capacity]Pixel) !void {
-    for (0..window_width) |x| {
-        for (0..window_height) |y| {
-            if (points[i_xy(x, y)] != Pixel.empty and y != window_height - 1) {
-                if (points[i_xy(x, y + 1)] == Pixel.empty) {
-                    points[i_xy(x, y + 1)] = Pixel.sand;
-                    points[i_xy(x, y)] = Pixel.empty;
+fn update(points: *[window.CAPACITY]pixel.Pixel) !void {
+    // TODO: should test that mass is conserved.
+    // TODO: how often should the simulation update, this should be configurable.
+    for (0..window.WINDOW_WIDTH) |x| {
+        for (0..window.WINDOW_HEIGHT) |y| {
+            // Check for non empty points.
+            // TODO: current implementation will not conserve mass, depending on how the updates
+            //   are going to occur, we should have some sort of buffer to not overwrite.
+            if (points[xy_i(x, y)] != pixel.Pixel.empty and y != window.WINDOW_HEIGHT - 1) {
+                if (points[xy_i(x, y + 1)] == pixel.Pixel.empty) {
+                    points[xy_i(x, y + 1)] = pixel.Pixel.sand;
+                    points[xy_i(x, y)] = pixel.Pixel.empty;
                 }
             }
         }
@@ -58,19 +36,24 @@ fn update(points: *[capacity]Pixel) !void {
 }
 
 pub fn main() !void {
-    r.InitWindow(window_width, window_height, "My Window Name");
+    r.InitWindow(window.WINDOW_WIDTH, window.WINDOW_HEIGHT, "My Window Name");
     r.SetTargetFPS(60);
     defer r.CloseWindow();
 
-    var points: [capacity]Pixel = [_]Pixel{Pixel.empty} ** capacity;
+    var points: [window.CAPACITY]pixel.Pixel = [_]pixel.Pixel{pixel.Pixel.empty} ** window.CAPACITY;
 
-    var lastPosition = Point{ .x = 0, .y = 0 };
+    var lastPosition = pixel.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
         if (r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON)) {
             const cursorPos = r.GetMousePosition();
-            if (r.CheckCollisionPointRec(cursorPos, SCEEN_RECTANGLE)) {
+            if (r.CheckCollisionPointRec(cursorPos, window.SCEEN_RECTANGLE)) {
                 const cursorPosPoint = pointFromVec2(cursorPos);
-                try plotLine(&points, lastPosition, cursorPosPoint, Pixel.sand);
+                try interact.plotLine(
+                    &points,
+                    lastPosition,
+                    cursorPosPoint,
+                    pixel.Pixel.sand,
+                );
                 lastPosition = cursorPosPoint;
             }
         } else {
@@ -81,12 +64,16 @@ pub fn main() !void {
 
         r.BeginDrawing();
         r.ClearBackground(r.RAYWHITE);
-        r.DrawFPS(window_width - 100, 10);
+        r.DrawFPS(window.WINDOW_WIDTH - 100, 10);
         r.DrawText("sandbox", 10, 10, 20, r.BLACK);
         for (&points, 0..) |item, i| {
             const i_c = @as(i32, @intCast(i));
-            if (item == Pixel.sand) {
-                r.DrawPixel(@rem(i_c, window_width), @divFloor(i_c, window_width), r.BLACK);
+            if (item == pixel.Pixel.sand) {
+                r.DrawPixel(
+                    @rem(i_c, window.WINDOW_WIDTH),
+                    @divFloor(i_c, window.WINDOW_WIDTH),
+                    r.BLACK,
+                );
             }
         }
 
