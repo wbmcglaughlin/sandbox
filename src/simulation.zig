@@ -28,21 +28,22 @@ pub fn up_pass(points: *Points) !void {
     });
     var non_empty: u32 = 0;
     for (0..window.WIDTH) |x| {
-        for (1..(window.HEIGHT - 1)) |y_a| {
+        for (0..window.HEIGHT) |y_a| {
             const y = window.HEIGHT - y_a - 1;
             if (points[x][y] == ParticleType.empty) {
                 continue;
             }
 
             non_empty += 1;
+            const bottom = y == window.HEIGHT - 2;
             // The effect of gravity on a solid particle.
-            if (points[x][y + 1] == ParticleType.empty) {
+            if (points[x][y + 1] == ParticleType.empty and !bottom) {
                 swap(points, x, y, x, y + 1);
             } else {
                 // The particle below is solid, check if the particle is going to fall.
-                if (points[x - 1][y + 1] == ParticleType.empty and x != 0) {
+                if (points[x - 1][y + 1] == ParticleType.empty and x != 0 and !bottom) {
                     swap(points, x, y, x - 1, y + 1);
-                } else if (points[x + 1][y + 1] == ParticleType.empty and x != window.WIDTH - 1) {
+                } else if (points[x + 1][y + 1] == ParticleType.empty and x != window.WIDTH - 1 and !bottom) {
                     swap(points, x, y, x + 1, y + 1);
                 } else {
                     // At this point there is no space for the particle to fall down into.
