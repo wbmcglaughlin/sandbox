@@ -36,7 +36,6 @@ pub fn main() !void {
 
         // zoom based on wheel
         const wheel = r.GetMouseWheelMove();
-        std.debug.print("{}", .{wheel});
         if (wheel != 0) {
             // get the world point that is under the mouse
             const mouseWorldPos = r.GetScreenToWorld2D(r.GetMousePosition(), cam);
@@ -56,6 +55,7 @@ pub fn main() !void {
         if (r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON)) {
             const cursorPos = r.GetMousePosition();
             if (r.CheckCollisionPointRec(cursorPos, window.SCEEN_RECTANGLE)) {
+                // TODO: this should handle zoom and translation.
                 const cursorPosPoint = particle.vec2_to_point(cursorPos);
                 try interact.plot_line(
                     &points,
