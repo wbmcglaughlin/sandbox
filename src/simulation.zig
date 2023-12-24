@@ -71,20 +71,14 @@ pub fn up_pass(points: *Points) !void {
             }
 
             // The particle below is solid, check if the particle is going to fall.
-            if (!bottom and !left_side and points[x - 1][y + 1].state == ParticleState.empty) {
-                const left_empty = points[x - 1][y].state == ParticleState.empty;
-                if (left_empty) {
-                    swap(points, x, y, x - 1, y + 1);
-                    continue;
-                }
+            if (!bottom and !left_side and points[x - 1][y + 1].state == ParticleState.empty and points[x - 1][y].state == ParticleState.empty) {
+                swap(points, x, y, x - 1, y + 1);
+                continue;
             }
 
-            if (!bottom and !right_side and points[x + 1][y + 1].state == ParticleState.empty) {
-                const right_empty = points[x + 1][y].state == ParticleState.empty;
-                if (right_empty) {
-                    swap(points, x, y, x + 1, y + 1);
-                    continue;
-                }
+            if (!bottom and !right_side and points[x + 1][y + 1].state == ParticleState.empty and points[x + 1][y].state == ParticleState.empty) {
+                swap(points, x, y, x + 1, y + 1);
+                continue;
             }
 
             if (points[x][y].state != ParticleState.liquid) {
