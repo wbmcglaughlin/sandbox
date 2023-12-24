@@ -27,7 +27,7 @@ pub fn main() !void {
 
     const left_click_particle = Particle{
         .type = ParticleType.grain,
-        .color = r.Color{ .a = 255, .r = 230, .g = 184, .b = 78 },
+        .color = r.Color{ .a = 255, .r = 145, .g = 121, .b = 77 },
     };
     const right_click_particle = Particle{
         .type = ParticleType.liquid,
@@ -37,31 +37,6 @@ pub fn main() !void {
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
         const mouseWorldPos = r.GetScreenToWorld2D(r.GetMousePosition(), cam);
-
-        // // translate based on right click
-        // if (r.IsMouseButtonDown(r.MOUSE_BUTTON_MIDDLE)) {
-        //     const delta = r.GetMouseDelta();
-        //     // delta = Vector2Scale(delta, -1.0f / cam.zoom);
-
-        //     cam.target = r.Vector2{ .x = cam.target.x + delta.x, .y = cam.target.y + delta.y };
-        // }
-
-        // // zoom based on wheel
-        // const wheel = r.GetMouseWheelMove();
-        // if (wheel != 0) {
-        //     // get the world point that is under the mouse
-
-        //     // set the offset to where the mouse is
-        //     cam.offset = r.GetMousePosition();
-
-        //     // set the target to match, so that the camera maps the world space point under the cursor to the screen space point under the cursor at any zoom
-        //     cam.target = mouseWorldPos;
-
-        //     // zoom
-        //     cam.zoom += wheel * 0.125;
-        //     if (cam.zoom < 0.125)
-        //         cam.zoom = 0.125;
-        // }
         const lmb_down = r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON);
         const rmb_down = r.IsMouseButtonDown(r.MOUSE_RIGHT_BUTTON);
         if (lmb_down or rmb_down) {

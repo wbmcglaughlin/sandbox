@@ -31,6 +31,11 @@ pub fn get_mass(points: *Points) u32 {
     }
     return mass;
 }
+
+fn is_heavier(heavier: ParticleType, lighter: ParticleType) bool {
+    return @intFromEnum(heavier) > @intFromEnum(lighter);
+}
+
 pub fn up_pass(points: *Points) !void {
     var prng = std.rand.DefaultPrng.init(blk: {
         var seed: u64 = undefined;
@@ -40,7 +45,8 @@ pub fn up_pass(points: *Points) !void {
     for (0..window.WIDTH) |x| {
         for (0..window.HEIGHT) |y_a| {
             const y = window.HEIGHT - y_a - 1;
-            if (points[x][y].type == ParticleType.empty) {
+            const particle_type = points[x][y].type;
+            if (particle_type == ParticleType.empty) {
                 continue;
             }
 
@@ -49,7 +55,7 @@ pub fn up_pass(points: *Points) !void {
             const right_side = x == window.WIDTH - 1;
             // TODO: should handle solid liquid interaction.
             // The effect of gravity on a solid particle.
-            if (points[x][y + 1].type == ParticleType.empty and !bottom) {
+            if (is_heavier(particle_type, points[x][y + 1].type) and !bottom) {
                 swap(points, x, y, x, y + 1);
             } else {
                 // The particle below is solid, check if the particle is going to fall.

@@ -1,7 +1,7 @@
 const r = @cImport(@cInclude("raylib.h"));
 
-pub const WIDTH: i32 = 300;
-pub const HEIGHT: i32 = 180;
+pub const WIDTH: i32 = 480;
+pub const HEIGHT: i32 = 300;
 pub const CAPACITY = WIDTH * HEIGHT;
 
 pub const SCALE: i32 = 3;
