@@ -8,6 +8,7 @@ const sim = @import("simulation.zig");
 
 const Vector2List = std.ArrayList(particle.Point);
 const Particle = particle.Particle;
+const ParticleState = particle.ParticleState;
 const ParticleType = particle.ParticleType;
 
 pub fn main() !void {
@@ -18,21 +19,15 @@ pub fn main() !void {
     var points: sim.Points = undefined;
     for (&points, 0..) |row, x| {
         for (row, 0..) |_, y| {
-            points[x][y] = Particle{ .type = ParticleType.empty, .color = r.Color{ .a = 0 } };
+            points[x][y] = Particle{ .state = ParticleState.empty, .color = r.Color{ .a = 0 } };
         }
     }
 
     var cam = r.Camera2D{ .rotation = 0 };
     cam.zoom = window.SCALE;
 
-    const left_click_particle = Particle{
-        .type = ParticleType.grain,
-        .color = r.Color{ .a = 255, .r = 145, .g = 121, .b = 77 },
-    };
-    const right_click_particle = Particle{
-        .type = ParticleType.liquid,
-        .color = r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
-    };
+    const left_click_particle = try particle.get_particle(ParticleType.dirt);
+    const right_click_particle = try particle.get_particle(ParticleType.water);
 
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
