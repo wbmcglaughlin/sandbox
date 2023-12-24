@@ -7,6 +7,7 @@ pub const ParticleType = enum(u32) {
     dirt,
     sand,
     stone,
+    wall,
 };
 
 pub fn vec2_to_point(vec: r.Vector2) Point {
@@ -38,6 +39,10 @@ pub fn get_particle(particle_type: ParticleType) !Particle {
         ParticleType.stone => Particle{
             .state = ParticleState.solid,
             .color = r.Color{ .a = 255, .r = 92, .g = 92, .b = 84 },
+        },
+        ParticleType.wall => Particle{
+            .state = ParticleState.immovable,
+            .color = r.Color{ .a = 255, .r = 200, .g = 200, .b = 200 },
         },
     };
 }
