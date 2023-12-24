@@ -65,20 +65,24 @@ pub fn up_pass(points: *Points) !void {
             const right_side = x == window.WIDTH - 1;
 
             // The effect of gravity on a solid particle.
-            if (is_heavier(particle_type, points[x][y + 1].state) and !bottom) {
-                swap(points, x, y, x, y + 1);
-                continue;
-            }
+            if (!bottom) {
+                if (is_heavier(particle_type, points[x][y + 1].state)) {
+                    swap(points, x, y, x, y + 1);
+                    continue;
+                }
 
-            // The particle below is solid, check if the particle is going to fall.
-            if (!bottom and !left_side and points[x - 1][y + 1].state == ParticleState.empty and points[x - 1][y].state == ParticleState.empty) {
-                swap(points, x, y, x - 1, y + 1);
-                continue;
-            }
+                // The particle below is solid, check if the particle is going to fall.
+                // Need to check if there is a barrier stopping it from falling on the
+                // adjacent tile.
+                if (!left_side and points[x - 1][y + 1].state == ParticleState.empty and points[x - 1][y].state == ParticleState.empty) {
+                    swap(points, x, y, x - 1, y + 1);
+                    continue;
+                }
 
-            if (!bottom and !right_side and points[x + 1][y + 1].state == ParticleState.empty and points[x + 1][y].state == ParticleState.empty) {
-                swap(points, x, y, x + 1, y + 1);
-                continue;
+                if (!right_side and points[x + 1][y + 1].state == ParticleState.empty and points[x + 1][y].state == ParticleState.empty) {
+                    swap(points, x, y, x + 1, y + 1);
+                    continue;
+                }
             }
 
             if (points[x][y].state != ParticleState.liquid) {
