@@ -2,8 +2,13 @@ const window = @import("window.zig");
 const particle = @import("particle.zig");
 const sim = @import("simulation.zig");
 
+pub const AppMode = enum {
+    drawing,
+    select,
+};
+
 // TODO: change line thickness.
-pub fn plot_line(
+pub fn draw_line(
     points: *sim.Points,
     start: particle.Point,
     end: particle.Point,

@@ -16,6 +16,8 @@ pub fn main() !void {
     r.SetTargetFPS(60);
     defer r.CloseWindow();
 
+    var app_mode = interact.AppMode.drawing;
+
     var points: sim.Points = undefined;
     for (&points, 0..) |row, x| {
         for (row, 0..) |_, y| {
@@ -40,7 +42,7 @@ pub fn main() !void {
         if (lmb_down or rmb_down) {
             if (r.CheckCollisionPointRec(mouseWorldPos, window.SCEEN_RECTANGLE)) {
                 const cursorPosPoint = particle.vec2_to_point(mouseWorldPos);
-                try interact.plot_line(
+                try interact.draw_line(
                     &points,
                     lastPosition,
                     cursorPosPoint,
@@ -50,6 +52,12 @@ pub fn main() !void {
             }
         } else {
             lastPosition = particle.vec2_to_point(mouseWorldPos);
+        }
+
+        if (r.IsKeyDown(r.KEY_S)) {
+            app_mode = interact.AppMode.select;
+        } else {
+            app_mode = interact.AppMode.drawing;
         }
 
         try sim.update(&points);
@@ -73,6 +81,25 @@ pub fn main() !void {
             }
         }
         r.EndMode2D();
+        if (app_mode == interact.AppMode.select) {
+            var posx: f32 = 10;
+            var posy: f32 = 10;
+            const width: f32 = 50;
+            inline for (@typeInfo(ParticleType).Enum.fields, 0..) |_, i| {
+                const particle_type: ParticleType = @enumFromInt(i);
+                const p = try particle.get_particle(particle_type);
+                const rec = r.Rectangle{
+                    .x = posx,
+                    .y = posy,
+                    .width = width,
+                    .height = width,
+                };
+                r.DrawRectangleRec(rec, p.color);
+                r.DrawRectangleLinesEx(rec, 3.0, r.BLACK);
+                posx += 10 + width;
+                posy += 0;
+            }
+        }
         r.EndDrawing();
     }
 }

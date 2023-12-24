@@ -1,7 +1,8 @@
 const r = @cImport(@cInclude("raylib.h"));
+const std = @import("std");
 pub const ParticleState = enum(u32) { empty, gas, liquid, grain, solid };
 pub const Point = struct { x: i32, y: i32 };
-pub const ParticleType = enum {
+pub const ParticleType = enum(u32) {
     water,
     dirt,
     sand,
