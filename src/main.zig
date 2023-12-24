@@ -36,7 +36,10 @@ pub fn main() !void {
 
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
-        const mouseWorldPos = r.GetScreenToWorld2D(r.GetMousePosition(), cam);
+        const mouseWorldPos = r.GetScreenToWorld2D(
+            r.GetMousePosition(),
+            cam,
+        );
         const lmb_down = r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON);
         const rmb_down = r.IsMouseButtonDown(r.MOUSE_RIGHT_BUTTON);
         if (lmb_down or rmb_down) {
