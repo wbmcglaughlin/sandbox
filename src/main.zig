@@ -1,5 +1,4 @@
 const r = @cImport(@cInclude("raylib.h"));
-const r_math = @cImport(@cInclude("raymath.h"));
 const std = @import("std");
 const window = @import("window.zig");
 const interact = @import("interact.zig");
@@ -17,7 +16,13 @@ pub fn main() !void {
     defer r.CloseWindow();
 
     var app_mode = interact.AppMode.drawing;
-
+    const grid = window.Grid{
+        .x_corner = 0,
+        .y_corner = 0,
+        .width = window.WINDOW_WIDTH,
+        .x_squares = 20,
+        .border = 10,
+    };
     var points: sim.Points = undefined;
     for (&points, 0..) |row, x| {
         for (row, 0..) |_, y| {
@@ -28,27 +33,46 @@ pub fn main() !void {
     var cam = r.Camera2D{ .rotation = 0 };
     cam.zoom = window.SCALE;
 
-    const left_click_particle = try particle.get_particle(ParticleType.dirt);
-    const right_click_particle = try particle.get_particle(ParticleType.water);
+    var left_click_particle = try particle.get_particle(ParticleType.dirt);
+    var right_click_particle = try particle.get_particle(ParticleType.water);
 
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
+        const mouse_position = r.GetMousePosition();
         const mouseWorldPos = r.GetScreenToWorld2D(
-            r.GetMousePosition(),
+            mouse_position,
             cam,
         );
         const lmb_down = r.IsMouseButtonDown(r.MOUSE_LEFT_BUTTON);
         const rmb_down = r.IsMouseButtonDown(r.MOUSE_RIGHT_BUTTON);
+
         if (lmb_down or rmb_down) {
-            if (r.CheckCollisionPointRec(mouseWorldPos, window.SCEEN_RECTANGLE)) {
-                const cursorPosPoint = particle.vec2_to_point(mouseWorldPos);
-                try interact.draw_line(
-                    &points,
-                    lastPosition,
-                    cursorPosPoint,
-                    if (lmb_down) left_click_particle else right_click_particle,
-                );
-                lastPosition = cursorPosPoint;
+            if (app_mode == interact.AppMode.drawing) {
+                if (r.CheckCollisionPointRec(mouseWorldPos, window.SCEEN_RECTANGLE)) {
+                    const cursorPosPoint = particle.vec2_to_point(mouseWorldPos);
+                    try interact.draw_line(
+                        &points,
+                        lastPosition,
+                        cursorPosPoint,
+                        if (lmb_down) left_click_particle else right_click_particle,
+                    );
+                    lastPosition = cursorPosPoint;
+                }
+            } else if (app_mode == interact.AppMode.select) {
+                if (grid.get_index(mouse_position)) |ind| {
+                    if (ind < @typeInfo(ParticleType).Enum.fields.len) {
+                        const particle_type: ParticleType = @enumFromInt(ind);
+                        const p = try particle.get_particle(particle_type);
+
+                        if (lmb_down) {
+                            left_click_particle = p;
+                        } else {
+                            right_click_particle = p;
+                        }
+                    }
+                } else |err| switch (err) {
+                    window.GridError.NoCollisionError => {},
+                }
             }
         } else {
             lastPosition = particle.vec2_to_point(mouseWorldPos);
@@ -64,8 +88,6 @@ pub fn main() !void {
 
         r.BeginDrawing();
         r.ClearBackground(r.RAYWHITE);
-        r.DrawFPS(window.WINDOW_WIDTH - 100, 10);
-        r.DrawText("sandbox", 10, 10, 20, r.BLACK);
 
         r.BeginMode2D(cam);
         // r.DrawRectangleLinesEx(window.SCEEN_RECTANGLE, 3, r.BLACK);
@@ -82,22 +104,12 @@ pub fn main() !void {
         }
         r.EndMode2D();
         if (app_mode == interact.AppMode.select) {
-            var posx: f32 = 10;
-            var posy: f32 = 10;
-            const width: f32 = 50;
             inline for (@typeInfo(ParticleType).Enum.fields, 0..) |_, i| {
                 const particle_type: ParticleType = @enumFromInt(i);
                 const p = try particle.get_particle(particle_type);
-                const rec = r.Rectangle{
-                    .x = posx,
-                    .y = posy,
-                    .width = width,
-                    .height = width,
-                };
+                const rec = grid.get_rectangle(i);
                 r.DrawRectangleRec(rec, p.color);
                 r.DrawRectangleLinesEx(rec, 3.0, r.BLACK);
-                posx += 10 + width;
-                posy += 0;
             }
         }
         r.EndDrawing();

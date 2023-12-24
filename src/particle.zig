@@ -1,11 +1,12 @@
 const r = @cImport(@cInclude("raylib.h"));
 const std = @import("std");
-pub const ParticleState = enum(u32) { empty, gas, liquid, grain, solid };
+pub const ParticleState = enum(u32) { empty, gas, liquid, grain, solid, immovable };
 pub const Point = struct { x: i32, y: i32 };
 pub const ParticleType = enum(u32) {
     water,
     dirt,
     sand,
+    stone,
 };
 
 pub fn vec2_to_point(vec: r.Vector2) Point {
@@ -32,7 +33,11 @@ pub fn get_particle(particle_type: ParticleType) !Particle {
         },
         ParticleType.sand => Particle{
             .state = ParticleState.grain,
-            .color = r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
+            .color = r.Color{ .a = 255, .r = 230, .g = 230, .b = 119 },
+        },
+        ParticleType.stone => Particle{
+            .state = ParticleState.solid,
+            .color = r.Color{ .a = 255, .r = 92, .g = 92, .b = 84 },
         },
     };
 }
