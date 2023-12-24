@@ -1,11 +1,13 @@
 const window = @import("window.zig");
 const particle = @import("particle.zig");
+const sim = @import("simulation.zig");
 
+// TODO: change line thickness.
 pub fn plot_line(
-    points: *[window.WIDTH][window.HEIGHT]particle.ParticleType,
+    points: *sim.Points,
     start: particle.Point,
     end: particle.Point,
-    pixel_type: particle.ParticleType,
+    p: particle.Particle,
 ) !void {
     var x = start.x;
     var y = start.y;
@@ -16,7 +18,7 @@ pub fn plot_line(
     var err = dx + dy;
 
     while (true) {
-        points[@as(usize, @intCast(x))][@as(usize, @intCast(y))] = pixel_type;
+        points[@as(usize, @intCast(x))][@as(usize, @intCast(y))] = p;
 
         if (x == end.x and y == end.y) break;
 

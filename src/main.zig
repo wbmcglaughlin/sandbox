@@ -7,6 +7,8 @@ const particle = @import("particle.zig");
 const sim = @import("simulation.zig");
 
 const Vector2List = std.ArrayList(particle.Point);
+const Particle = particle.Particle;
+const ParticleType = particle.ParticleType;
 
 pub fn main() !void {
     r.InitWindow(window.WINDOW_WIDTH, window.WINDOW_HEIGHT, "sandbox");
@@ -16,15 +18,22 @@ pub fn main() !void {
     var points: sim.Points = undefined;
     for (&points, 0..) |row, x| {
         for (row, 0..) |_, y| {
-            points[x][y] = particle.ParticleType.empty;
+            points[x][y] = Particle{ .type = ParticleType.empty, .color = r.Color{ .a = 0 } };
         }
     }
 
     var cam = r.Camera2D{ .rotation = 0 };
     cam.zoom = window.SCALE;
 
-    const left_click_particle = particle.ParticleType.sand;
-    const right_click_particle = particle.ParticleType.water;
+    const left_click_particle = Particle{
+        .type = ParticleType.grain,
+        .color = r.Color{ .a = 255, .r = 230, .g = 184, .b = 78 },
+    };
+    const right_click_particle = Particle{
+        .type = ParticleType.liquid,
+        .color = r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
+    };
+
     var lastPosition = particle.Point{ .x = 0, .y = 0 };
     while (!r.WindowShouldClose()) {
         const mouseWorldPos = r.GetScreenToWorld2D(r.GetMousePosition(), cam);
@@ -81,16 +90,11 @@ pub fn main() !void {
         // r.DrawRectangleLinesEx(window.SCEEN_RECTANGLE, 3, r.BLACK);
         for (&points, 0..) |row, x| {
             for (row, 0..) |item, y| {
-                const color = switch (item) {
-                    particle.ParticleType.sand => r.Color{ .a = 255, .r = 230, .g = 184, .b = 78 },
-                    particle.ParticleType.water => r.Color{ .a = 255, .r = 43, .g = 125, .b = 240 },
-                    else => r.Color{ .a = 0 },
-                };
-                if (color.a != 0) {
+                if (item.color.a != 0) {
                     r.DrawPixel(
                         @as(i32, @intCast(x)),
                         @as(i32, @intCast(y)),
-                        color,
+                        item.color,
                     );
                 }
             }
