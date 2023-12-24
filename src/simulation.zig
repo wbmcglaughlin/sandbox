@@ -44,46 +44,65 @@ pub fn up_pass(points: *Points) !void {
     });
     for (0..window.WIDTH) |x| {
         for (0..window.HEIGHT) |y_a| {
+            // Invert coordinates for the up pass.
             const y = window.HEIGHT - y_a - 1;
+
             const particle_type = points[x][y].state;
-            if (particle_type == ParticleState.empty or particle_type == ParticleState.immovable) {
+
+            // Skip empty particles.
+            if (particle_type == ParticleState.empty) {
                 continue;
             }
 
+            // Skip immovable particles.
+            if (particle_type == ParticleState.immovable) {
+                continue;
+            }
+
+            // Store constants to check border cases.
             const bottom = y == window.HEIGHT - 2;
             const left_side = x == 0;
             const right_side = x == window.WIDTH - 1;
+
             // The effect of gravity on a solid particle.
             if (is_heavier(particle_type, points[x][y + 1].state) and !bottom) {
                 swap(points, x, y, x, y + 1);
+                continue;
+            }
+
+            // The particle below is solid, check if the particle is going to fall.
+            if (!bottom and !left_side and points[x - 1][y + 1].state == ParticleState.empty) {
+                const left_empty = points[x - 1][y].state == ParticleState.empty;
+                if (left_empty) {
+                    swap(points, x, y, x - 1, y + 1);
+                    continue;
+                }
+            }
+
+            if (!bottom and !right_side and points[x + 1][y + 1].state == ParticleState.empty) {
+                const right_empty = points[x + 1][y].state == ParticleState.empty;
+                if (right_empty) {
+                    swap(points, x, y, x + 1, y + 1);
+                    continue;
+                }
+            }
+
+            if (points[x][y].state != ParticleState.liquid) {
+                continue;
+            }
+
+            // At this point there is no space for the particle to fall down into.
+            // Liquids should randomly move left or right if there is available space.
+            const value = prng.random().intRangeAtMost(i64, 0, 1);
+            if (value == 0) {
+                if (!left_side and points[x - 1][y].state == ParticleState.empty) {
+                    swap(points, x, y, x - 1, y);
+                    continue;
+                }
             } else {
-                // The particle below is solid, check if the particle is going to fall.
-                if (!bottom and !left_side and points[x - 1][y + 1].state == ParticleState.empty) {
-                    const left_empty = points[x - 1][y].state == ParticleState.empty;
-                    if (left_empty) {
-                        swap(points, x, y, x - 1, y + 1);
-                    }
-                } else if (!bottom and !right_side and points[x + 1][y + 1].state == ParticleState.empty) {
-                    const right_empty = points[x + 1][y].state == ParticleState.empty;
-                    if (right_empty) {
-                        swap(points, x, y, x + 1, y + 1);
-                    }
-                } else {
-                    if (points[x][y].state != ParticleState.liquid) {
-                        continue;
-                    }
-                    // At this point there is no space for the particle to fall down into.
-                    // Liquids should randomly move left or right if there is available space.
-                    const value = prng.random().intRangeAtMost(i64, 0, 1);
-                    if (value == 0) {
-                        if (!left_side and points[x - 1][y].state == ParticleState.empty) {
-                            swap(points, x, y, x - 1, y);
-                        }
-                    } else {
-                        if (!right_side and points[x + 1][y].state == ParticleState.empty) {
-                            swap(points, x, y, x + 1, y);
-                        }
-                    }
+                if (!right_side and points[x + 1][y].state == ParticleState.empty) {
+                    swap(points, x, y, x + 1, y);
+                    continue;
                 }
             }
         }
