@@ -20,6 +20,10 @@ pub fn swap(points: *Points, x1: usize, y1: usize, x2: usize, y2: usize) void {
     points[x2][y2] = temp;
 }
 
+pub fn is_empty(points: *Points, x: usize, y: usize) bool {
+    return points[x][y].state == particle.ParticleState.empty;
+}
+
 pub fn get_mass(points: *Points) u32 {
     var mass: u32 = 0;
     for (points, 0..) |row, x| {
@@ -37,11 +41,14 @@ fn is_heavier(heavier: ParticleState, lighter: ParticleState) bool {
 }
 
 pub fn up_pass(points: *Points) !void {
+    // simulation random number generation, init every pass.
     var prng = std.rand.DefaultPrng.init(blk: {
         var seed: u64 = undefined;
         try std.os.getrandom(std.mem.asBytes(&seed));
         break :blk seed;
     });
+
+    // iterate over each pixel in the array.
     for (0..window.WIDTH) |x| {
         for (0..window.HEIGHT) |y_a| {
             // Invert coordinates for the up pass.
@@ -74,12 +81,12 @@ pub fn up_pass(points: *Points) !void {
                 // The particle below is solid, check if the particle is going to fall.
                 // Need to check if there is a barrier stopping it from falling on the
                 // adjacent tile.
-                if (!left_side and points[x - 1][y + 1].state == ParticleState.empty and points[x - 1][y].state == ParticleState.empty) {
+                if (!left_side and is_empty(points, x - 1, y + 1) and is_empty(points, x - 1, y)) {
                     swap(points, x, y, x - 1, y + 1);
                     continue;
                 }
 
-                if (!right_side and points[x + 1][y + 1].state == ParticleState.empty and points[x + 1][y].state == ParticleState.empty) {
+                if (!right_side and is_empty(points, x + 1, y + 1) and is_empty(points, x + 1, y)) {
                     swap(points, x, y, x + 1, y + 1);
                     continue;
                 }
@@ -93,12 +100,12 @@ pub fn up_pass(points: *Points) !void {
             // Liquids should randomly move left or right if there is available space.
             const value = prng.random().intRangeAtMost(i64, 0, 1);
             if (value == 0) {
-                if (!left_side and points[x - 1][y].state == ParticleState.empty) {
+                if (!left_side and is_empty(points, x - 1, y)) {
                     swap(points, x, y, x - 1, y);
                     continue;
                 }
             } else {
-                if (!right_side and points[x + 1][y].state == ParticleState.empty) {
+                if (!right_side and is_empty(points, x + 1, y)) {
                     swap(points, x, y, x + 1, y);
                     continue;
                 }

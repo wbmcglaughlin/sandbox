@@ -16,6 +16,8 @@ pub fn main() !void {
     defer r.CloseWindow();
 
     var app_mode = interact.AppMode.drawing;
+    var render_mode = interact.RenderMode.color;
+
     const grid = window.Grid{
         .x_corner = 0,
         .y_corner = 0,
@@ -84,6 +86,12 @@ pub fn main() !void {
             app_mode = interact.AppMode.drawing;
         }
 
+        if (r.IsKeyDown(r.KEY_T)) {
+            render_mode = interact.RenderMode.temperature;
+        } else {
+            render_mode = interact.RenderMode.color;
+        }
+
         try sim.update(&points);
 
         r.BeginDrawing();
@@ -93,11 +101,17 @@ pub fn main() !void {
         // r.DrawRectangleLinesEx(window.SCEEN_RECTANGLE, 3, r.BLACK);
         for (&points, 0..) |row, x| {
             for (row, 0..) |item, y| {
+                var pixel_col: r.Color = undefined;
+                if (render_mode == interact.RenderMode.color) {
+                    pixel_col = item.color;
+                } else {
+                    pixel_col = particle.hslToRgb(item.temperature / 300, 0.3, 0.3);
+                }
                 if (item.color.a != 0) {
                     r.DrawPixel(
                         @as(i32, @intCast(x)),
                         @as(i32, @intCast(y)),
-                        item.color,
+                        pixel_col,
                     );
                 }
             }

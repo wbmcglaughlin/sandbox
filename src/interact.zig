@@ -7,6 +7,11 @@ pub const AppMode = enum {
     select,
 };
 
+pub const RenderMode = enum {
+    color,
+    temperature,
+};
+
 // TODO: change line thickness.
 pub fn draw_line(
     points: *sim.Points,
